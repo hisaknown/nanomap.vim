@@ -73,6 +73,7 @@ function! nanomap#show_nanomap() abort
         setl winwidth=1
         setl buftype=nofile
         setl filetype=nanomap
+        autocmd NanoMap BufWinLeave <buffer> call timer_stop(b:nanomap_timer)
         for i in range(s:len_nanomap_palette)
             for j in range(s:len_nanomap_palette)
                 execute('syntax match nanomap' . printf('%02d%02d', i, j)
@@ -118,8 +119,6 @@ function! s:update_nanomap(ch) abort
                         \  'out_msg': '',
                         \  'exit_cb': funcref('s:apply_nanomap')
                         \ })
-        else
-            call timer_stop(a:ch)
         endif
     catch
         call timer_stop(a:ch)
