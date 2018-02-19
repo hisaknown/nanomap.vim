@@ -2,6 +2,10 @@
 Tiny overview of the code.
 Inspired by minimap in Sublime Text.
 
+## Screencast
+Watch the right side!
+![Demo of nanomap.vim](https://raw.githubusercontent.com/wiki/hisaknown/nanomap.vim/screencast.gif)
+
 ## Requirements
 - Vim with `has('job')`, `setbufline()`.
 - Python
