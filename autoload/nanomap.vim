@@ -106,7 +106,7 @@ function! s:update_nanomap(ch) abort
     try
         if s:nanomap_exists()
             call writefile(getbufline(bufnr('%'), 1, '$'), b:nanomap_tmpfile)
-            let l:cmd = 'python3 ' . s:script_dir . '/nanomap/text_density.py'
+            let l:cmd = 'python ' . s:script_dir . '/nanomap/text_density.py'
             let l:cmd .= ' --color_bins ' . s:len_nanomap_palette
             let l:cmd .= ' --n_target_lines ' . winheight(b:nanomap_winid)
             let l:cmd .= ' --highlight_lines ' . line('w0') . ' ' . line('w$')
