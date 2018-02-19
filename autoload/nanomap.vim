@@ -100,6 +100,7 @@ function! nanomap#show_nanomap() abort
     endif
     let b:nanomap_timer = timer_start(g:nanomap_delay, funcref('s:update_nanomap'), {'repeat': -1})
     let s:timers = add(s:timers, b:nanomap_timer)
+    call setbufvar(winbufnr(b:nanomap_winid), 'nanomap_timer', b:nanomap_timer)
 endfunction
 
 function! s:update_nanomap(ch) abort
