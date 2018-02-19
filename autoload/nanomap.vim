@@ -116,8 +116,6 @@ function! s:update_nanomap(ch) abort
                         \  'out_name': b:nanomap_tmpmap,
                         \  'out_modifiable': 1,
                         \  'out_msg': '',
-                        \  'err_io': 'buffer',
-                        \  'err_name': 'nanomap:err',
                         \  'exit_cb': funcref('s:apply_nanomap')
                         \ })
         else
