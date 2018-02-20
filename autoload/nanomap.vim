@@ -54,15 +54,16 @@ function! nanomap#show_nanomap() abort
     if !s:nanomap_exists()
         let l:current_winid = win_getid()
         let l:nanomap_name = b:nanomap_name
-        execute('silent! vertical rightbelow ' . g:nanomap_width . 'split nanomap:' . expand('%'))
+        execute('silent! vertical rightbelow ' . g:nanomap_width . 'split ' . l:nanomap_name)
         let l:nanomap_winid = win_getid()
         let b:nanomap_source_winid = l:current_winid
-        setl nonumber
-        setl nowrap
-        setl winwidth=1
-        setl buftype=nofile
-        setl filetype=nanomap
-        autocmd NanoMap BufWinLeave <buffer> call s:post_close_proc()
+        setlocal nonumber
+        setlocal nowrap
+        setlocal winwidth=1
+        setlocal buftype=nofile
+        setlocal filetype=nanomap
+        autocmd! NanoMap * <buffer>
+        autocmd NanoMap BufUnload <buffer> call s:post_close_proc(expand('<afile>'))
         for i in range(s:len_nanomap_palette)
             for j in range(s:len_nanomap_palette)
                 execute('syntax match nanomap' . printf('%02d%02d', i, j)
@@ -88,7 +89,7 @@ function! nanomap#show_nanomap() abort
     let b:nanomap_timer = timer_start(g:nanomap_delay, funcref('s:update_nanomap'), {'repeat': -1})
     call setbufvar(winbufnr(b:nanomap_winid), 'nanomap_timer', b:nanomap_timer)
 
-    let s:maps_dict[l:nanomap_name] = {
+    let s:maps_dict[b:nanomap_name] = {
                 \ 'tmpfile': b:nanomap_tmpfile,
                 \ 'tmpmap':  b:nanomap_tmpmap,
                 \ 'timer':   b:nanomap_timer,
@@ -153,15 +154,13 @@ function! nanomap#goto_line(source_winid) abort
     endif
 endfunction
 
-function! s:post_close_proc() abort
-    for map_name in keys(s:maps_dict)
-        if empty(win_findbuf(bufnr(map_name)))
-            call timer_stop(s:maps_dict[map_name]['timer'])
-            call delete(s:maps_dict[map_name]['tmpfile'])
-            call delete(s:maps_dict[map_name]['tmpmap'])
-            call remove(s:maps_dict, map_name)
-        endif
-    endfor
+function! s:post_close_proc(map_name) abort
+    call timer_stop(s:maps_dict[a:map_name]['timer'])
+    let l:tmpfile = s:maps_dict[a:map_name]['tmpfile']
+    let l:tmpmap = s:maps_dict[a:map_name]['tmpmap']
+    call timer_start(g:nanomap_delay, {ch -> delete(l:tmpfile)})
+    call timer_start(g:nanomap_delay, {ch -> delete(l:tmpmap)})
+    call remove(s:maps_dict, a:map_name)
 endfunction
 
 command! NanoMapClose call s:close_nanomap()
