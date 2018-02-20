@@ -81,7 +81,7 @@ function! nanomap#show_nanomap() abort
         let b:nanomap_tmpfile = tempname()
         let b:nanomap_tmpmap = tempname()
     else
-        echomsg '[nanomap.vim] NanoMap is already there!'
+        echo '[nanomap.vim] NanoMap is already there!'
     endif
 
     if exists('b:nanomap_timer')
