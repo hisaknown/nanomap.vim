@@ -13,6 +13,7 @@ let s:script_dir = expand('<sfile>:p:h')
 
 let s:maps_dict = {}
 autocmd NanoMap BufEnter * call s:resize_maps()
+autocmd NanoMap VimLeave * call s:post_close_proc('')
 
 function! nanomap#define_palette() abort
     if has('gui_running') || (has('termguicolors') && &termguicolors)
@@ -156,12 +157,20 @@ function! nanomap#goto_line(source_winid) abort
 endfunction
 
 function! s:post_close_proc(map_name) abort
-    call timer_stop(s:maps_dict[a:map_name]['timer'])
-    let l:tmpfile = s:maps_dict[a:map_name]['tmpfile']
-    let l:tmpmap = s:maps_dict[a:map_name]['tmpmap']
-    call timer_start(g:nanomap_delay, {ch -> delete(l:tmpfile)})
-    call timer_start(g:nanomap_delay, {ch -> delete(l:tmpmap)})
-    call remove(s:maps_dict, a:map_name)
+    if len(a:map_name) == 0 " VimLeave
+        for map_name in keys(s:maps_dict)
+            call timer_stop(s:maps_dict[map_name]['timer'])
+            call delete(s:maps_dict[map_name]['tmpfile'])
+            call delete(s:maps_dict[map_name]['tmpmap'])
+        endfor
+    else
+        call timer_stop(s:maps_dict[a:map_name]['timer'])
+        let l:tmpfile = s:maps_dict[a:map_name]['tmpfile']
+        let l:tmpmap = s:maps_dict[a:map_name]['tmpmap']
+        call timer_start(g:nanomap_delay, {ch -> [delete(l:tmpfile), delete(l:tmpmap), remove(s:maps_dict, a:map_name)]})
+        "call timer_start(g:nanomap_delay, {ch -> delete(l:tmpmap)})
+        " call remove(s:maps_dict, a:map_name)
+    endif
 endfunction
 
 function! s:resize_maps() abort
