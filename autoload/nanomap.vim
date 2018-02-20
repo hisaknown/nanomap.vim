@@ -168,8 +168,6 @@ function! s:post_close_proc(map_name) abort
         let l:tmpfile = s:maps_dict[a:map_name]['tmpfile']
         let l:tmpmap = s:maps_dict[a:map_name]['tmpmap']
         call timer_start(g:nanomap_delay, {ch -> [delete(l:tmpfile), delete(l:tmpmap), remove(s:maps_dict, a:map_name)]})
-        "call timer_start(g:nanomap_delay, {ch -> delete(l:tmpmap)})
-        " call remove(s:maps_dict, a:map_name)
     endif
 endfunction
 
