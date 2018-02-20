@@ -149,7 +149,7 @@ function! nanomap#goto_line(source_winid) abort
         let l:pos_frac = (line('.') + 0.0) / line('$')
         call win_gotoid(a:source_winid)
         let l:line = str2nr(printf('%.f', round(l:pos_frac * line('$'))))
-        call cursor(l:line, 10)
+        call cursor(l:line, 0)
     else
         echo '[nanomap.vim] Corresponding window is not found!'
     endif
