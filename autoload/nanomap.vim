@@ -11,19 +11,7 @@ endif
 let s:is_loaded = 1
 let s:script_dir = expand('<sfile>:p:h')
 
-let s:tmpfiles = []
-let s:timers = []
-
-autocmd NanoMap VimLeave * call s:delete_tmpfiles()
-
-function! s:delete_tmpfiles() abort
-    for l in s:timers
-        call timer_stop(l)
-    endfor
-    for l in s:tmpfiles
-        call delete(l)
-    endfor
-endfunction
+let s:maps_dict = {}
 
 function! nanomap#define_palette() abort
     if has('gui_running') || (has('termguicolors') && &termguicolors)
@@ -62,9 +50,10 @@ endfunction
 
 function! nanomap#show_nanomap() abort
     call nanomap#define_palette()
-    let b:nanomap_name = 'nanomap:' . expand('%')
+    let b:nanomap_name = 'nanomap:' . expand('%:p')
     if !s:nanomap_exists()
         let l:current_winid = win_getid()
+        let l:nanomap_name = b:nanomap_name
         execute('silent! vertical rightbelow ' . g:nanomap_width . 'split nanomap:' . expand('%'))
         let l:nanomap_winid = win_getid()
         let b:nanomap_source_winid = l:current_winid
@@ -73,7 +62,7 @@ function! nanomap#show_nanomap() abort
         setl winwidth=1
         setl buftype=nofile
         setl filetype=nanomap
-        autocmd NanoMap BufWinLeave <buffer> call timer_stop(b:nanomap_timer)
+        autocmd NanoMap BufWinLeave <buffer> call s:post_close_proc()
         for i in range(s:len_nanomap_palette)
             for j in range(s:len_nanomap_palette)
                 execute('syntax match nanomap' . printf('%02d%02d', i, j)
@@ -88,9 +77,7 @@ function! nanomap#show_nanomap() abort
         let b:nanomap_height = winheight(b:nanomap_winid)
 
         let b:nanomap_tmpfile = tempname()
-        let s:tempfiles = add(s:tmpfiles, b:nanomap_tmpfile)
         let b:nanomap_tmpmap = tempname()
-        let s:tempfiles = add(s:tmpfiles, b:nanomap_tmpmap)
     else
         echomsg '[nanomap.vim] NanoMap is already there!'
     endif
@@ -99,8 +86,13 @@ function! nanomap#show_nanomap() abort
         call timer_stop(b:nanomap_timer)
     endif
     let b:nanomap_timer = timer_start(g:nanomap_delay, funcref('s:update_nanomap'), {'repeat': -1})
-    let s:timers = add(s:timers, b:nanomap_timer)
     call setbufvar(winbufnr(b:nanomap_winid), 'nanomap_timer', b:nanomap_timer)
+
+    let s:maps_dict[l:nanomap_name] = {
+                \ 'tmpfile': b:nanomap_tmpfile,
+                \ 'tmpmap':  b:nanomap_tmpmap,
+                \ 'timer':   b:nanomap_timer,
+                \ }
 endfunction
 
 function! s:update_nanomap(ch) abort
@@ -159,6 +151,17 @@ function! nanomap#goto_line(source_winid) abort
     else
         echo '[nanomap.vim] Corresponding window is not found!'
     endif
+endfunction
+
+function! s:post_close_proc() abort
+    for map_name in keys(s:maps_dict)
+        if empty(win_findbuf(bufnr(map_name)))
+            call timer_stop(s:maps_dict[map_name]['timer'])
+            call delete(s:maps_dict[map_name]['tmpfile'])
+            call delete(s:maps_dict[map_name]['tmpmap'])
+            call remove(s:maps_dict, map_name)
+        endif
+    endfor
 endfunction
 
 command! NanoMapClose call s:close_nanomap()
