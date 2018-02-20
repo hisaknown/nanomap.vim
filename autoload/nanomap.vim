@@ -12,6 +12,7 @@ let s:is_loaded = 1
 let s:script_dir = expand('<sfile>:p:h')
 
 let s:maps_dict = {}
+autocmd NanoMap BufEnter * call s:resize_maps()
 
 function! nanomap#define_palette() abort
     if has('gui_running') || (has('termguicolors') && &termguicolors)
@@ -161,6 +162,20 @@ function! s:post_close_proc(map_name) abort
     call timer_start(g:nanomap_delay, {ch -> delete(l:tmpfile)})
     call timer_start(g:nanomap_delay, {ch -> delete(l:tmpmap)})
     call remove(s:maps_dict, a:map_name)
+endfunction
+
+function! s:resize_maps() abort
+    for map_name in keys(s:maps_dict)
+        for winid in win_findbuf(bufnr(map_name))
+            if winwidth(winid) != g:nanomap_width
+                let l:current_winid = win_getid()
+                call win_gotoid(winid)
+                call execute('vertical resize ' . g:nanomap_width)
+                call cursor(0, 1)
+                call win_gotoid(l:current_winid)
+            endif
+        endfor
+    endfor
 endfunction
 
 command! NanoMapClose call s:close_nanomap()
