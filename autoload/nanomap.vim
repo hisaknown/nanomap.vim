@@ -1,7 +1,7 @@
 scriptencoding utf-8
 
-let s:save_cpo = &cpo
-set cpo&vim
+let s:save_cpo = &cpoptions
+set cpoptions&vim
 
 if exists('s:is_loaded')
     finish
@@ -28,14 +28,14 @@ function! nanomap#define_palette() abort
         let s:backend = 'cterm'
     endif
 
-    for i in range(s:len_nanomap_palette)
-        for j in range(s:len_nanomap_palette)
-            execute('highlight nanomap' . printf('%02d%02d', i, j)
-                        \ . ' ' . s:backend . 'fg=' . s:nanomap_palette[i]
-                        \ . ' ' . s:backend . 'bg=' . s:nanomap_palette[j])
-            execute('highlight nanomap' . printf('%02d%02dhi', i, j)
-                        \ . ' ' . s:backend . 'fg=' . s:nanomap_palette_hi[i]
-                        \ . ' ' . s:backend . 'bg=' . s:nanomap_palette_hi[j])
+    for l:i in range(s:len_nanomap_palette)
+        for l:j in range(s:len_nanomap_palette)
+            execute('highlight nanomap' . printf('%02d%02d', l:i, l:j)
+                        \ . ' ' . s:backend . 'fg=' . s:nanomap_palette[l:i]
+                        \ . ' ' . s:backend . 'bg=' . s:nanomap_palette[l:j])
+            execute('highlight nanomap' . printf('%02d%02dhi', l:i, l:j)
+                        \ . ' ' . s:backend . 'fg=' . s:nanomap_palette_hi[l:i]
+                        \ . ' ' . s:backend . 'bg=' . s:nanomap_palette_hi[l:j])
         endfor
     endfor
 endfunction
@@ -66,12 +66,12 @@ function! nanomap#show_nanomap() abort
         setlocal filetype=nanomap
         autocmd! NanoMap * <buffer>
         autocmd NanoMap BufUnload <buffer> call s:post_close_proc(expand('<afile>'))
-        for i in range(s:len_nanomap_palette)
-            for j in range(s:len_nanomap_palette)
-                execute('syntax match nanomap' . printf('%02d%02d', i, j)
-                            \ . ' /.nanomap' . printf('%02d%02d/', i, j))
-                execute('syntax match nanomap' . printf('%02d%02dhi', i, j)
-                            \ . ' /.nanomap' . printf('%02d%02dhi/', i, j))
+        for l:i in range(s:len_nanomap_palette)
+            for l:j in range(s:len_nanomap_palette)
+                execute('syntax match nanomap' . printf('%02d%02d', l:i, l:j)
+                            \ . ' /.nanomap' . printf('%02d%02d/', l:i, l:j))
+                execute('syntax match nanomap' . printf('%02d%02dhi', l:i, l:j)
+                            \ . ' /.nanomap' . printf('%02d%02dhi/', l:i, l:j))
             endfor
         endfor
         nnoremap <buffer><silent> <CR> :<C-u>silent! call nanomap#goto_line(b:nanomap_source_winid)<CR>
@@ -89,6 +89,7 @@ function! nanomap#show_nanomap() abort
         call timer_stop(b:nanomap_timer)
     endif
     let b:nanomap_timer = timer_start(g:nanomap_delay, funcref('s:update_nanomap'), {'repeat': -1})
+    let b:nanomap_prev_changedtick = -1
     call setbufvar(winbufnr(b:nanomap_winid), 'nanomap_timer', b:nanomap_timer)
 
     let s:maps_dict[b:nanomap_name] = {
@@ -101,20 +102,24 @@ endfunction
 function! s:update_nanomap(ch) abort
     try
         if s:nanomap_exists()
-            call writefile(getbufline(bufnr('%'), 1, '$'), b:nanomap_tmpfile)
-            let l:cmd = 'python ' . s:script_dir . '/nanomap/text_density.py'
-            let l:cmd .= ' --color_bins ' . s:len_nanomap_palette
-            let l:cmd .= ' --n_target_lines ' . winheight(b:nanomap_winid)
-            let l:cmd .= ' --highlight_lines ' . line('w0') . ' ' . line('w$')
-            let l:job = job_start(l:cmd,
-                        \ {'in_io': 'file',
-                        \  'in_name': b:nanomap_tmpfile,
-                        \  'out_io': 'file',
-                        \  'out_name': b:nanomap_tmpmap,
-                        \  'out_modifiable': 1,
-                        \  'out_msg': '',
-                        \  'exit_cb': funcref('s:apply_nanomap')
-                        \ })
+            if b:nanomap_prev_changedtick != b:changedtick
+                call writefile(getbufline(bufnr('%'), 1, '$'), b:nanomap_tmpfile)
+                let l:cmd = 'python ' . s:script_dir . '/nanomap/text_density.py'
+                let l:cmd .= ' --color_bins ' . s:len_nanomap_palette
+                let l:cmd .= ' --n_target_lines ' . winheight(b:nanomap_winid)
+                let l:job = job_start(l:cmd,
+                            \ {'in_io': 'file',
+                            \  'in_name': b:nanomap_tmpfile,
+                            \  'out_io': 'file',
+                            \  'out_name': b:nanomap_tmpmap,
+                            \  'out_modifiable': 1,
+                            \  'out_msg': '',
+                            \  'exit_cb': funcref('s:apply_nanomap')
+                            \ })
+                let b:nanomap_prev_changedtick = b:changedtick
+            else
+                call s:apply_nanomap(-1, 0)
+            endif
         endif
     catch
         call timer_stop(a:ch)
@@ -128,12 +133,27 @@ function! s:apply_nanomap(job, exit_status) abort
             call win_gotoid(b:nanomap_winid)
             %delete _
             call win_gotoid(l:current_winid)
+            let b:nanomap_height = winheight(b:nanomap_winid)
+            let b:nanomap_prev_changedtick = -1
         endif
+        let l:line_ratio = b:nanomap_height * 1.0 / line('$')
+        let l:line_upper = line('w0') * l:line_ratio
+        let l:line_lower = line('w$') * l:line_ratio
+
+        if type(a:job) == v:t_job
+            let b:nanomap_content = readfile(b:nanomap_tmpmap)
+        endif
+        let l:nanomap_content = copy(b:nanomap_content)
         let l:line_count = 0
-        for l in readfile(b:nanomap_tmpmap)
-            call setbufline(winbufnr(b:nanomap_winid), l:line_count, l)
+        for l:l in b:nanomap_content
+            if (l:line_count + 0.5 > l:line_upper && l:line_count + 0.5 < l:line_lower)
+                        \ || abs(l:line_count + 0.5 - l:line_upper) <= 0.5
+                        \ || abs(l:line_count + 0.5 - l:line_lower) <= 0.5
+                let l:nanomap_content[l:line_count] .= 'hi'
+            endif
             let l:line_count += 1
         endfor
+        call setbufline(winbufnr(b:nanomap_winid), 1, l:nanomap_content)
     endif
 endfunction
 
@@ -158,10 +178,10 @@ endfunction
 
 function! s:post_close_proc(map_name) abort
     if len(a:map_name) == 0 " VimLeave
-        for map_name in keys(s:maps_dict)
-            call timer_stop(s:maps_dict[map_name]['timer'])
-            call delete(s:maps_dict[map_name]['tmpfile'])
-            call delete(s:maps_dict[map_name]['tmpmap'])
+        for l:map_name in keys(s:maps_dict)
+            call timer_stop(s:maps_dict[l:map_name]['timer'])
+            call delete(s:maps_dict[l:map_name]['tmpfile'])
+            call delete(s:maps_dict[l:map_name]['tmpmap'])
         endfor
     else
         call timer_stop(s:maps_dict[a:map_name]['timer'])
@@ -172,11 +192,11 @@ function! s:post_close_proc(map_name) abort
 endfunction
 
 function! s:resize_maps() abort
-    for map_name in keys(s:maps_dict)
-        for winid in win_findbuf(bufnr(map_name))
-            if winwidth(winid) != g:nanomap_width
+    for l:map_name in keys(s:maps_dict)
+        for l:winid in win_findbuf(bufnr(l:map_name))
+            if winwidth(l:winid) != g:nanomap_width
                 let l:current_winid = win_getid()
-                call win_gotoid(winid)
+                call win_gotoid(l:winid)
                 call execute('vertical resize ' . g:nanomap_width)
                 call cursor(0, 1)
                 call win_gotoid(l:current_winid)
@@ -187,5 +207,5 @@ endfunction
 
 command! NanoMapClose call s:close_nanomap()
 
-let &cpo = s:save_cpo
+let &cpoptions = s:save_cpo
 unlet s:save_cpo

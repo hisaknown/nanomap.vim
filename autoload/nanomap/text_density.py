@@ -34,7 +34,6 @@ parser.add_argument('--encoding', type=str, default='utf-8')
 parser.add_argument('--out_type', type=str, choices=['char', 'color'],
                     default='color')
 parser.add_argument('--color_bins', type=int, default=255)
-parser.add_argument('--highlight_lines', type=int, nargs=2, default=[0, 0])
 args = parser.parse_args()
 
 # MEMO: Following glyphs may be useful:
@@ -111,11 +110,6 @@ elif args.out_type == 'color':
                 temp_res[i], temp_res[i + 1]
             ))
         current_pos = i * (n_lines / (args.n_target_lines * 2))
-        if args.highlight_lines[0] < current_pos < args.highlight_lines[1]:
-            res[-1] += 'hi'
-        elif (abs(current_pos - args.highlight_lines[0]) <= (n_lines / (args.n_target_lines))
-              or abs(current_pos - args.highlight_lines[1]) <= (n_lines / (args.n_target_lines))):
-            res[-1] += 'hi'
 
 for r in res:
     print(r)
