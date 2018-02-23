@@ -144,7 +144,8 @@ function! s:apply_nanomap(job, exit_status) abort
             let b:nanomap_content = readfile(b:nanomap_tmpmap)
         endif
         let l:nanomap_content = copy(b:nanomap_content)
-        for l:i in range(float2nr(floor(l:line_upper)), float2nr(ceil(l:line_lower)))
+        for l:i in range(float2nr(floor(l:line_upper)),
+                    \ min([float2nr(ceil(l:line_lower)), b:nanomap_height - 1]))
             let l:nanomap_content[l:i] .= 'hi'
         endfor
         call setbufline(winbufnr(b:nanomap_winid), 1, l:nanomap_content)
