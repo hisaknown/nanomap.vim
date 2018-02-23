@@ -102,11 +102,11 @@ elif args.out_type == 'color':
         temp_res.append(color)
     for i in range(0, len(temp_res), 2):
         if i == len(temp_res) - 1:
-            res.append(u'▀nanomap{0:02d}{1:02d}'.format(
+            res.append(u'▀{0:02d}{1:02d}'.format(
                 temp_res[i], 0
             ))
         else:
-            res.append(u'▀nanomap{0:02d}{1:02d}'.format(
+            res.append(u'▀{0:02d}{1:02d}'.format(
                 temp_res[i], temp_res[i + 1]
             ))
         current_pos = i * (n_lines / (args.n_target_lines * 2))
