@@ -68,10 +68,8 @@ function! nanomap#show_nanomap() abort
         autocmd NanoMap BufUnload <buffer> call s:post_close_proc(expand('<afile>'))
         for l:i in range(s:len_nanomap_palette)
             for l:j in range(s:len_nanomap_palette)
-                execute('syntax match nanomap' . printf('%02d%02d', l:i, l:j)
-                            \ . printf(' /▀%02d%02d/', l:i, l:j))
-                execute('syntax match nanomap' . printf('%02d%02dhi', l:i, l:j)
-                            \ . printf(' /▀%02d%02dhi/', l:i, l:j))
+                call matchadd('nanomap' . printf('%02d%02d', l:i, l:j), printf('▀%02d%02d', l:i, l:j))
+                call matchadd('nanomap' . printf('%02d%02dhi', l:i, l:j), printf('▀%02d%02dhi', l:i, l:j))
             endfor
         endfor
         nnoremap <buffer><silent> <CR> :<C-u>silent! call nanomap#goto_line(b:nanomap_source_winid)<CR>
