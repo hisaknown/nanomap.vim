@@ -73,6 +73,7 @@ function! nanomap#show_nanomap() abort
             endfor
         endfor
         nnoremap <buffer><silent> <CR> :<C-u>silent! call nanomap#goto_line(b:nanomap_source_winid)<CR>
+        nnoremap <buffer><silent> <LeftRelease> <Esc>:<C-u>silent! call nanomap#goto_line(b:nanomap_source_winid)<CR>
         call win_gotoid(l:current_winid)
         let b:nanomap_winid = l:nanomap_winid
         let b:nanomap_height = winheight(b:nanomap_winid)
