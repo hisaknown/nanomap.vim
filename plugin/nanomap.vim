@@ -9,51 +9,58 @@ endif
 let s:is_loaded = 1
 
 
-let g:nanomap_cterm = [
-            \ 16,
-            \ 232,
-            \ 233,
-            \ 234,
-            \ 235,
-            \ 236,
-            \ 237,
-            \ 238,
-            \ 239,
-            \ 240,
-            \ 241,
-            \ 242,
-            \ 243,
-            \ ]
-let g:nanomap_cterm_highlight = [
-            \ 244,
-            \ 245,
-            \ 246,
-            \ 247,
-            \ 248,
-            \ 249,
-            \ 250,
-            \ 251,
-            \ 252,
-            \ 253,
-            \ 254,
-            \ 255,
-            \ 231,
-            \ ]
-let g:nanomap_cgui = [
-            \ '#000000',
-            \ '#080808',
-            \ '#121212',
-            \ '#1c1c1c',
-            \ '#262626',
-            \ '#303030',
-            \ '#3a3a3a',
-            \ '#444444',
-            \ '#4e4e4e',
-            \ '#585858',
-            \ '#626262',
-            \ '#6c6c6c',
-            \ '#767676',
-            \ ]
+if !exists('g:nanomap_cterm')
+    let g:nanomap_cterm = [
+                \ 16,
+                \ 232,
+                \ 233,
+                \ 234,
+                \ 235,
+                \ 236,
+                \ 237,
+                \ 238,
+                \ 239,
+                \ 240,
+                \ 241,
+                \ 242,
+                \ 243,
+                \ ]
+endif
+if !exists('g:nanomap_cterm_highlight')
+    let g:nanomap_cterm_highlight = [
+                \ 244,
+                \ 245,
+                \ 246,
+                \ 247,
+                \ 248,
+                \ 249,
+                \ 250,
+                \ 251,
+                \ 252,
+                \ 253,
+                \ 254,
+                \ 255,
+                \ 231,
+                \ ]
+endif
+if !exists('g:nanomap_cgui')
+    let g:nanomap_cgui = [
+                \ '#000000',
+                \ '#080808',
+                \ '#121212',
+                \ '#1c1c1c',
+                \ '#262626',
+                \ '#303030',
+                \ '#3a3a3a',
+                \ '#444444',
+                \ '#4e4e4e',
+                \ '#585858',
+                \ '#626262',
+                \ '#6c6c6c',
+                \ '#767676',
+                \ ]
+endif
+if !exists('g:nanomap_cgui_highlight')
 let g:nanomap_cgui_highlight = [
             \ '#0a283c',
             \ '#123044',
@@ -69,10 +76,19 @@ let g:nanomap_cgui_highlight = [
             \ '#7694a8',
             \ '#809eb2',
             \ ]
-let g:nanomap_delay = 500
-let g:nanomap_width = 2
-let g:nanomap_auto_realign = 1
-let g:nanomap_relative_color = 1
+endif
+if !exists('g:nanomap_delay')
+    let g:nanomap_delay = 500
+endif
+if !exists('g:nanomap_width')
+    let g:nanomap_width = 2
+endif
+if !exists('g:nanomap_auto_realign')
+    let g:nanomap_auto_realign = 1
+endif
+if !exists('g:nanomap_relative_color')
+    let g:nanomap_relative_color = 1
+endif
 
 function! s:define_palette_if_exists() abort
     if exists('b:nanomap_name') && exists('b:nanomap_winid') && win_id2win(b:nanomap_winid) != 0
