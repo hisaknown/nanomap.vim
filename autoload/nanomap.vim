@@ -55,6 +55,7 @@ function! nanomap#show_nanomap() abort
     call nanomap#define_palette()
     let w:nanomap_name = 'nanomap:' . expand('%:p') . win_getid()
     if !s:nanomap_exists()
+        autocmd! NanoMap WinNew *
         let l:current_winid = win_getid()
         let l:nanomap_name = w:nanomap_name
         execute('silent! vertical rightbelow ' . g:nanomap_width . 'split ' . l:nanomap_name)
@@ -65,6 +66,7 @@ function! nanomap#show_nanomap() abort
         setlocal winwidth=1
         setlocal buftype=nofile
         setlocal filetype=nanomap
+        setlocal winfixwidth
         autocmd! NanoMap * <buffer>
         autocmd NanoMap BufUnload <buffer> call s:post_close_proc(expand('<afile>'))
         for l:i in range(s:len_nanomap_palette)
@@ -81,6 +83,7 @@ function! nanomap#show_nanomap() abort
 
         let w:nanomap_tmpfile = tempname()
         let w:nanomap_tmpmap = tempname()
+        autocmd NanoMap WinNew * call s:realign_maps()
     else
         echo '[nanomap.vim] NanoMap is already there!'
     endif
@@ -125,6 +128,7 @@ function! s:update_nanomap(ch) abort
             endif
         endif
     catch
+        echo v:exception
         call timer_stop(a:ch)
     endtry
 endfunction
@@ -145,6 +149,8 @@ function! s:apply_nanomap(job, exit_status) abort
 
         if type(a:job) == v:t_job
             let w:nanomap_content = readfile(w:nanomap_tmpmap)
+        elseif !exists('w:nanomap_content')
+            return
         endif
         let l:nanomap_content = copy(w:nanomap_content)
         for l:i in range(float2nr(floor(l:line_upper)),
