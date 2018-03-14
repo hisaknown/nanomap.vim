@@ -107,6 +107,9 @@ function! s:update_nanomap(ch) abort
                 let l:cmd = 'python ' . s:script_dir . '/nanomap/text_density.py'
                 let l:cmd .= ' --color_bins ' . s:len_nanomap_palette
                 let l:cmd .= ' --n_target_lines ' . winheight(w:nanomap_winid)
+                if g:nanomap_relative_color
+                    let l:cmd .= ' --relative_color'
+                endif
                 let l:job = job_start(l:cmd,
                             \ {'in_io': 'file',
                             \  'in_name': w:nanomap_tmpfile,

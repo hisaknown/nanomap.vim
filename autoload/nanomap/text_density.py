@@ -33,6 +33,7 @@ parser.add_argument('--n_target_lines', type=int, default='40',
 parser.add_argument('--encoding', type=str, default='utf-8')
 parser.add_argument('--out_type', type=str, choices=['char', 'color'],
                     default='color')
+parser.add_argument('--relative_color', action='store_true')
 parser.add_argument('--color_bins', type=int, default=255)
 args = parser.parse_args()
 
@@ -65,7 +66,7 @@ else:
 res = []
 
 chars_max = max(abstracted_n_chars)
-chars_min = min(abstracted_n_chars)
+chars_min = min(abstracted_n_chars) if args.relative_color else 0
 if args.out_type == 'char':
     # Thresholds for character assginment
     chars_one_third = chars_min + int(float(chars_max - chars_min) / 3)

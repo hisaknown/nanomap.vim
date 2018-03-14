@@ -72,6 +72,7 @@ let g:nanomap_cgui_highlight = [
 let g:nanomap_delay = 500
 let g:nanomap_width = 2
 let g:nanomap_auto_realign = 1
+let g:nanomap_relative_color = 1
 
 function! s:define_palette_if_exists() abort
     if exists('b:nanomap_name') && exists('b:nanomap_winid') && win_id2win(b:nanomap_winid) != 0
