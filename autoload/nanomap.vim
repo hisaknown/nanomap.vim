@@ -11,7 +11,7 @@ endif
 let s:is_loaded = 1
 let s:script_dir = expand('<sfile>:p:h')
 
-let s:maps_dict = {}
+let g:maps_dict = {}
 autocmd NanoMap BufEnter * call s:resize_maps()
 autocmd NanoMap VimLeave * call s:post_close_proc('')
 autocmd NanoMap WinNew * call s:realign_maps()
@@ -67,8 +67,6 @@ function! nanomap#show_nanomap() abort
         setlocal buftype=nofile
         setlocal filetype=nanomap
         setlocal winfixwidth
-        autocmd! NanoMap * <buffer>
-        autocmd NanoMap BufUnload <buffer> call s:post_close_proc(expand('<afile>'))
         for l:i in range(s:len_nanomap_palette)
             for l:j in range(s:len_nanomap_palette)
                 call matchadd('nanomap' . printf('%02d%02d', l:i, l:j), printf('▀%02d%02d', l:i, l:j))
@@ -81,32 +79,21 @@ function! nanomap#show_nanomap() abort
         let w:nanomap_winid = l:nanomap_winid
         let w:nanomap_height = winheight(w:nanomap_winid)
 
-        let w:nanomap_tmpfile = tempname()
-        let w:nanomap_tmpmap = tempname()
         autocmd NanoMap WinNew * call s:realign_maps()
     else
         echo '[nanomap.vim] NanoMap is already there!'
     endif
 
-    if exists('w:nanomap_timer')
-        call timer_stop(w:nanomap_timer)
+    if !exists('s:nanomap_timer')
+        let s:nanomap_timer = timer_start(g:nanomap_delay, funcref('s:update_nanomap'), {'repeat': -1})
     endif
-    let w:nanomap_timer = timer_start(g:nanomap_delay, funcref('s:update_nanomap'), {'repeat': -1})
     let w:nanomap_prev_changedtick = -1
-    call setwinvar(win_id2win(w:nanomap_winid), 'nanomap_timer', w:nanomap_timer)
-
-    let s:maps_dict[w:nanomap_name] = {
-                \ 'tmpfile': w:nanomap_tmpfile,
-                \ 'tmpmap':  w:nanomap_tmpmap,
-                \ 'timer':   w:nanomap_timer,
-                \ }
 endfunction
 
 function! s:update_nanomap(ch) abort
     try
         if s:nanomap_exists()
             if w:nanomap_prev_changedtick != b:changedtick
-                call writefile(getbufline(bufnr('%'), 1, '$'), w:nanomap_tmpfile)
                 let l:cmd = 'python ' . s:script_dir . '/nanomap/text_density.py'
                 let l:cmd .= ' --color_bins ' . s:len_nanomap_palette
                 let l:cmd .= ' --n_target_lines ' . winheight(w:nanomap_winid)
@@ -114,10 +101,10 @@ function! s:update_nanomap(ch) abort
                     let l:cmd .= ' --relative_color'
                 endif
                 let l:job = job_start(l:cmd,
-                            \ {'in_io': 'file',
-                            \  'in_name': w:nanomap_tmpfile,
-                            \  'out_io': 'file',
-                            \  'out_name': w:nanomap_tmpmap,
+                            \ {'in_io': 'buffer',
+                            \  'in_buf': bufnr('%'),
+                            \  'out_io': 'buffer',
+                            \  'out_name': w:nanomap_name,
                             \  'out_modifiable': 1,
                             \  'out_msg': '',
                             \  'exit_cb': funcref('s:apply_nanomap')
@@ -148,8 +135,8 @@ function! s:apply_nanomap(job, exit_status) abort
         let l:line_lower = line('w$') * l:line_ratio
 
         if type(a:job) == v:t_job
-            let w:nanomap_content = readfile(w:nanomap_tmpmap)
-        elseif !exists('w:nanomap_content')
+            let w:nanomap_content = getbufline(winbufnr(w:nanomap_winid), 1, '$')
+        elseif !exists('w:nanomap_content') || w:nanomap_prev_changedtick < 0
             return
         endif
         let l:nanomap_content = copy(w:nanomap_content)
@@ -180,23 +167,8 @@ function! nanomap#goto_line(source_winid) abort
     endif
 endfunction
 
-function! s:post_close_proc(map_name) abort
-    if len(a:map_name) == 0 " VimLeave
-        for l:map_name in keys(s:maps_dict)
-            call timer_stop(s:maps_dict[l:map_name]['timer'])
-            call delete(s:maps_dict[l:map_name]['tmpfile'])
-            call delete(s:maps_dict[l:map_name]['tmpmap'])
-        endfor
-    else
-        call timer_stop(s:maps_dict[a:map_name]['timer'])
-        let l:tmpfile = s:maps_dict[a:map_name]['tmpfile']
-        let l:tmpmap = s:maps_dict[a:map_name]['tmpmap']
-        call timer_start(g:nanomap_delay, {ch -> [delete(l:tmpfile), delete(l:tmpmap), remove(s:maps_dict, a:map_name)]})
-    endif
-endfunction
-
 function! s:resize_maps() abort
-    for l:map_name in keys(s:maps_dict)
+    for l:map_name in keys(g:maps_dict)
         for l:winid in win_findbuf(bufnr(l:map_name))
             if winwidth(l:winid) != g:nanomap_width
                 let l:current_winid = win_getid()
