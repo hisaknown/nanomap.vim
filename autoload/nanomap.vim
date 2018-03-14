@@ -14,6 +14,7 @@ let s:script_dir = expand('<sfile>:p:h')
 let s:maps_dict = {}
 autocmd NanoMap BufEnter * call s:resize_maps()
 autocmd NanoMap VimLeave * call s:post_close_proc('')
+autocmd NanoMap WinNew * call s:realign_maps()
 
 function! nanomap#define_palette() abort
     if has('gui_running') || (has('termguicolors') && &termguicolors)
@@ -197,6 +198,21 @@ function! s:resize_maps() abort
             endif
         endfor
     endfor
+endfunction
+
+function! s:realign_maps() abort
+    autocmd! NanoMap WinNew *
+    if g:nanomap_auto_realign
+        for l:win in getwininfo()
+            let l:nanomap_winid = getbufvar(l:win['bufnr'], 'nanomap_winid')
+            echomsg l:nanomap_winid
+            if !empty(l:nanomap_winid) && win_id2win(l:nanomap_winid) != 0
+                call s:close_nanomap()
+                call nanomap#show_nanomap()
+            endif
+        endfor
+    endif
+    autocmd NanoMap WinNew * call s:realign_maps()
 endfunction
 
 command! NanoMapClose call s:close_nanomap()
