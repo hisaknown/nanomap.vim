@@ -13,7 +13,6 @@ let s:script_dir = expand('<sfile>:p:h')
 
 let g:maps_dict = {}
 autocmd NanoMap BufEnter * call s:resize_maps()
-autocmd NanoMap VimLeave * call s:post_close_proc('')
 autocmd NanoMap WinNew * call s:realign_maps()
 
 function! nanomap#define_palette() abort
