@@ -132,9 +132,6 @@ function! s:apply_nanomap(channel) abort
             let w:nanomap_height = winheight(w:nanomap_winid)
             let w:nanomap_prev_changedtick = -1
         endif
-        let l:line_ratio = w:nanomap_height * 1.0 / line('$')
-        let l:line_upper = (line('w0') - 1) * l:line_ratio
-        let l:line_lower = (line('w$') - 1) * l:line_ratio
 
         if type(a:channel) == v:t_channel
             let w:nanomap_content = []
@@ -148,6 +145,10 @@ function! s:apply_nanomap(channel) abort
             call s:update_nanomap(-1)
         endif
         let l:nanomap_content = copy(w:nanomap_content)
+
+        let l:line_ratio = (w:nanomap_height - count(w:nanomap_content, '')) * 1.0 / line('$')
+        let l:line_upper = (line('w0') - 1) * l:line_ratio
+        let l:line_lower = (line('w$') - 1) * l:line_ratio
         try
             for l:i in range(float2nr(floor(l:line_upper)),
                         \ min([float2nr(ceil(l:line_lower)), w:nanomap_height]))
