@@ -40,20 +40,23 @@ function! nanomap#define_palette() abort
     endfor
 endfunction
 
-function! s:nanomap_exists() abort
-    if exists('w:nanomap_name') && exists('w:nanomap_winid')
+function! nanomap#nanomap_exists() abort
+    if exists('w:nanomap_name')
+                \ && exists('w:nanomap_winid')
                 \ && win_id2win(w:nanomap_winid) != 0
                 \ && bufname(winbufnr(w:nanomap_winid))[:6] ==# 'nanomap'
         return 1
-    else
-        return 0
     endif
+    return 0
 endfunction
 
 function! nanomap#show_nanomap() abort
+    if bufname('%')[:7] == 'nanomap:'
+        return
+    endif
     call nanomap#define_palette()
     let w:nanomap_name = 'nanomap:' . expand('%:p') . win_getid()
-    if !s:nanomap_exists()
+    if !nanomap#nanomap_exists()
         autocmd! NanoMap WinNew *
         let l:current_winid = win_getid()
         let l:nanomap_name = w:nanomap_name
@@ -64,6 +67,7 @@ function! nanomap#show_nanomap() abort
         setlocal nowrap
         setlocal winwidth=1
         setlocal buftype=nofile
+        setlocal modifiable
         setlocal filetype=nanomap
         setlocal winfixwidth
         for l:i in range(s:len_nanomap_palette)
@@ -91,7 +95,7 @@ endfunction
 
 function! s:update_nanomap(ch) abort
     try
-        if s:nanomap_exists()
+        if nanomap#nanomap_exists()
             if w:nanomap_prev_changedtick != b:changedtick
                 let l:cmd = 'python ' . s:script_dir . '/nanomap/text_density.py'
                 let l:cmd .= ' --color_bins ' . s:len_nanomap_palette
@@ -102,25 +106,24 @@ function! s:update_nanomap(ch) abort
                 let l:job = job_start(l:cmd,
                             \ {'in_io': 'buffer',
                             \  'in_buf': bufnr('%'),
-                            \  'out_io': 'buffer',
-                            \  'out_name': w:nanomap_name,
-                            \  'out_modifiable': 1,
                             \  'out_msg': '',
-                            \  'exit_cb': funcref('s:apply_nanomap')
+                            \  'close_cb': funcref('s:apply_nanomap')
                             \ })
                 let w:nanomap_prev_changedtick = b:changedtick
             else
-                call s:apply_nanomap(-1, 0)
+                call s:apply_nanomap(-1)
             endif
         endif
     catch
-        echomsg '[nanomap.vim] Something went wrong. Stopping update of nanomap...\nProblem details: ' . v:exception
+        echomsg '[nanomap.vim] Something went wrong. Stopping update of nanomap...'
+        echomsg '[nanomap.vim] Problem details: ' . v:exception
         call timer_stop(a:ch)
+        unlet s:nanomap_timer
     endtry
 endfunction
 
-function! s:apply_nanomap(job, exit_status) abort
-    if s:nanomap_exists()
+function! s:apply_nanomap(channel) abort
+    if nanomap#nanomap_exists()
         if winheight(w:nanomap_winid) != w:nanomap_height
             let l:current_winid = win_getid()
             call win_gotoid(w:nanomap_winid)
@@ -130,26 +133,42 @@ function! s:apply_nanomap(job, exit_status) abort
             let w:nanomap_prev_changedtick = -1
         endif
         let l:line_ratio = w:nanomap_height * 1.0 / line('$')
-        let l:line_upper = line('w0') * l:line_ratio
-        let l:line_lower = line('w$') * l:line_ratio
+        let l:line_upper = (line('w0') - 1) * l:line_ratio
+        let l:line_lower = (line('w$') - 1) * l:line_ratio
 
-        if type(a:job) == v:t_job
-            let w:nanomap_content = getbufline(winbufnr(w:nanomap_winid), 1, '$')
+        if type(a:channel) == v:t_channel
+            let w:nanomap_content = []
+            while ch_status(a:channel, {'part': 'out'}) == 'buffered'
+                call add(w:nanomap_content, ch_read(a:channel))
+            endwhile
+            while len(w:nanomap_content) < w:nanomap_height
+                call add(w:nanomap_content, '')
+            endwhile
         elseif !exists('w:nanomap_content') || w:nanomap_prev_changedtick < 0
             call s:update_nanomap(-1)
         endif
         let l:nanomap_content = copy(w:nanomap_content)
-        for l:i in range(float2nr(floor(l:line_upper)),
-                    \ min([float2nr(ceil(l:line_lower)), w:nanomap_height - 1]))
-            let l:nanomap_content[l:i] .= 'hi'
-        endfor
-        call setbufline(winbufnr(w:nanomap_winid), 1, l:nanomap_content)
+        try
+            for l:i in range(float2nr(floor(l:line_upper)),
+                        \ min([float2nr(ceil(l:line_lower)), w:nanomap_height]))
+                if l:nanomap_content[l:i] != ''
+                    let l:nanomap_content[l:i] .= 'hi'
+                endif
+            endfor
+        catch /^Vim\%((\a\+)\)\=:E684/
+            " Catch out of range
+        endtry
+        try
+            call setbufline(winbufnr(w:nanomap_winid), 1, l:nanomap_content)
+        catch /^Vim\%((\a\+)\)\=:E21/
+            " Catch nomodifible
+        endtry
     endif
 endfunction
 
 function! s:close_nanomap() abort
-    if s:nanomap_exists()
-        execute(win_id2win(w:nanomap_winid) . 'close')
+    if nanomap#nanomap_exists()
+        execute(win_id2win(w:nanomap_winid) . 'quit')
     else
         echo '[nanomap.vim] This buffer does not have NanoMap!'
     endif
@@ -157,7 +176,7 @@ endfunction
 
 function! nanomap#goto_line(source_winid) abort
     if win_id2win(a:source_winid) != 0
-        let l:pos_frac = (line('.') + 0.0) / line('$')
+        let l:pos_frac = (line('.') + 0.0) / (line('$') - count(getline(1, '$'), ''))
         call win_gotoid(a:source_winid)
         let l:line = str2nr(printf('%.f', round(l:pos_frac * line('$'))))
         call cursor(l:line, 0)
@@ -190,7 +209,7 @@ function! s:realign_maps() abort
             if !empty(l:nanomap_winid) && win_id2win(l:nanomap_winid) != 0
                 call s:close_nanomap()
                 call nanomap#show_nanomap()
-                call s:apply_nanomap(-1, 0)
+                call s:apply_nanomap(-1)
             endif
         endfor
         call win_gotoid(l:current_winid)
