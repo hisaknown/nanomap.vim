@@ -105,6 +105,7 @@ augroup NanoMap
 augroup END
 
 command! NanoMapShow call nanomap#show_nanomap()
+command! NanoMapClose call nanomap#close()
 
 let &cpo = s:save_cpo
 unlet s:save_cpo

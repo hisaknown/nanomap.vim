@@ -172,7 +172,7 @@ function! s:apply_nanomap(channel) abort
     endif
 endfunction
 
-function! s:close_nanomap() abort
+function! nanomap#close() abort
     if nanomap#nanomap_exists()
         execute(win_id2win(w:nanomap_winid) . 'quit')
     else
@@ -213,7 +213,7 @@ function! s:realign_maps() abort
             call win_gotoid(l:win['winid'])
             let l:nanomap_winid = getwinvar(l:win['winnr'], 'nanomap_winid')
             if !empty(l:nanomap_winid) && win_id2win(l:nanomap_winid) != 0
-                call s:close_nanomap()
+                call nanomap#close()
                 call nanomap#show_nanomap()
                 call s:apply_nanomap(-1)
             endif
@@ -222,8 +222,6 @@ function! s:realign_maps() abort
     endif
     autocmd NanoMap WinNew * call s:realign_maps()
 endfunction
-
-command! NanoMapClose call s:close_nanomap()
 
 let &cpoptions = s:save_cpo
 unlet s:save_cpo
