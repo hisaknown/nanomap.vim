@@ -14,7 +14,7 @@ Watch the right side!
 `:NanoMapShow` to show the map of the current buffer.
 To disable, `:NanoMapClose` or just close the window of the map.
 
-## Customization
+## Variables
 - `g:nanomap_cgui`: List of colors which will be used in GUI.
 - `g:nanomap_cterm`: List of colors which will be used in terminal.
 - `g:nanomap_cgui_highlight`: Highlighted version of `g:nanomap_cgui`. This will be used to show where the cursor is. Must have the same length as `g:nanomap_cgui`.
@@ -24,68 +24,15 @@ To disable, `:NanoMapClose` or just close the window of the map.
 - `g:nanomap_auto_realign`: If `1`, the map follows when the window is split. Defaults to `1`.
 - `g:nanomap_relative_color`: If `1`, color of the map is based on relative density of the buffer. Otherwise, it is based on absolute density. Defaults to `1`.
 
-### Setting example (Default values)
+### Setting example
+This setting allows your vim to open NanoMap automatically.
 ```vim
-let g:nanomap_cterm = [
-            \ 16,
-            \ 232,
-            \ 233,
-            \ 234,
-            \ 235,
-            \ 236,
-            \ 237,
-            \ 238,
-            \ 239,
-            \ 240,
-            \ 241,
-            \ 242,
-            \ 243,
-            \ ]
-let g:nanomap_cterm_highlight = [
-            \ 244,
-            \ 245,
-            \ 246,
-            \ 247,
-            \ 248,
-            \ 249,
-            \ 250,
-            \ 251,
-            \ 252,
-            \ 253,
-            \ 254,
-            \ 255,
-            \ 231,
-            \ ]
-let g:nanomap_cgui = [
-            \ '#000000',
-            \ '#080808',
-            \ '#121212',
-            \ '#1c1c1c',
-            \ '#262626',
-            \ '#303030',
-            \ '#3a3a3a',
-            \ '#444444',
-            \ '#4e4e4e',
-            \ '#585858',
-            \ '#626262',
-            \ '#6c6c6c',
-            \ '#767676',
-            \ ]
-let g:nanomap_cgui_highlight = [
-            \ '#0a283c',
-            \ '#123044',
-            \ '#1c3a4e',
-            \ '#264458',
-            \ '#304e62',
-            \ '#3a586c',
-            \ '#446276',
-            \ '#4e6c80',
-            \ '#58768a',
-            \ '#628094',
-            \ '#6c8a9e',
-            \ '#7694a8',
-            \ '#809eb2',
-            \ ]
-let g:nanomap_delay = 500
-let g:nanomap_width = 2
+let g:nanomap_relative_color = 0
+" Automatically open NanoMap.
+autocmd vimrc BufWinEnter * NanoMapShow
+" Automatically close NanoMap
+" Note that this causes E855 when you attempt to :close the last buffer.
+autocmd vimrc BufWinLeave * NanoMapClose
+" Using :quit instead of :close works without error.
+autocmd vimrc QuitPre * NanoMapClose
 ```
