@@ -22,8 +22,8 @@ To disable, `:NanoMapClose` or just close the window of the map.
 - `g:nanomap_highlight_delay`: Update interval for the highlight of the map in milliseconds. Defaults to `500`.
 - `g:nanomap_update_delay`: Update interval for the content of the map in milliseconds. Defaults to `5000`. Small value will cause laggy editting.
 - `g:nanomap_width`: Width of the buffer for the map. Defaults to `2`.
-- `g:nanomap_auto_realign`: If `1`, the map follows when the window is split. Defaults to `1`.
-- `g:nanomap_relative_color`: If `1`, color of the map is based on relative density of the buffer. Otherwise, it is based on absolute density. Defaults to `1`.
+- `g:nanomap_auto_realign`: If `1`, the map (somewhat agressively) follows when the window is split. Defaults to `0`.
+- `g:nanomap_relative_color`: If `1`, color of the map is based on relative density of the buffer. Otherwise, it is based on absolute density. Defaults to `0`.
 
 ### Setting example
 This setting allows your vim to open NanoMap automatically.

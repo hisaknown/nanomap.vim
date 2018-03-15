@@ -87,10 +87,10 @@ if !exists('g:nanomap_width')
     let g:nanomap_width = 2
 endif
 if !exists('g:nanomap_auto_realign')
-    let g:nanomap_auto_realign = 1
+    let g:nanomap_auto_realign = 0
 endif
 if !exists('g:nanomap_relative_color')
-    let g:nanomap_relative_color = 1
+    let g:nanomap_relative_color = 0
 endif
 if !exists('g:nanomap_verbose')
     let g:nanomap_verbose = 0
