@@ -92,6 +92,9 @@ endif
 if !exists('g:nanomap_relative_color')
     let g:nanomap_relative_color = 1
 endif
+if !exists('g:nanomap_verbose')
+    let g:nanomap_verbose = 0
+endif
 
 function! s:define_palette_if_exists() abort
     if exists('b:nanomap_name') && exists('b:nanomap_winid') && win_id2win(b:nanomap_winid) != 0

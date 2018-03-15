@@ -84,7 +84,9 @@ function! nanomap#show_nanomap() abort
 
         autocmd NanoMap WinNew * call s:realign_maps()
     else
-        echo '[nanomap.vim] NanoMap is already there!'
+        if g:nanomap_verbose
+            echo '[nanomap.vim] NanoMap is already there!'
+        endif
     endif
 
     if !exists('s:nanomap_timer')
@@ -176,7 +178,9 @@ function! nanomap#close() abort
     if nanomap#nanomap_exists()
         execute(win_id2win(w:nanomap_winid) . 'quit')
     else
-        echo '[nanomap.vim] This buffer does not have NanoMap!'
+        if g:nanomap_verbose
+            echo '[nanomap.vim] This buffer does not have NanoMap!'
+        endif
     endif
 endfunction
 
@@ -187,7 +191,9 @@ function! nanomap#goto_line(source_winid) abort
         let l:line = str2nr(printf('%.f', round(l:pos_frac * line('$'))))
         call cursor(l:line, 0)
     else
-        echo '[nanomap.vim] Corresponding window is not found!'
+        if g:nanomap_verbose
+            echo '[nanomap.vim] Corresponding window is not found!'
+        endif
     endif
 endfunction
 
