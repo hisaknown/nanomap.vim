@@ -114,7 +114,7 @@ function! s:update_nanomap(ch) abort
             endif
         endif
     catch
-        echo v:exception
+        echomsg '[nanomap.vim] Something went wrong. Stopping update of nanomap...\nProblem details: ' . v:exception
         call timer_stop(a:ch)
     endtry
 endfunction
