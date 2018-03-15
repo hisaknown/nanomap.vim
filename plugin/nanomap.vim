@@ -77,8 +77,11 @@ let g:nanomap_cgui_highlight = [
             \ '#809eb2',
             \ ]
 endif
-if !exists('g:nanomap_delay')
-    let g:nanomap_delay = 500
+if !exists('g:nanomap_highlight_delay')
+    let g:nanomap_highlight_delay = 500
+endif
+if !exists('g:nanomap_update_delay')
+    let g:nanomap_update_delay = 5000
 endif
 if !exists('g:nanomap_width')
     let g:nanomap_width = 2
