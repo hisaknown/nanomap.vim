@@ -60,7 +60,7 @@ function! nanomap#show_nanomap() abort
         autocmd! NanoMap WinNew *
         let l:current_winid = win_getid()
         let l:nanomap_name = w:nanomap_name
-        execute('silent! vertical rightbelow ' . g:nanomap_width . 'split ' . l:nanomap_name)
+        execute('silent! noswapfile vertical rightbelow ' . g:nanomap_width . 'split ' . l:nanomap_name)
         let l:nanomap_winid = win_getid()
         let w:nanomap_source_winid = l:current_winid
         setlocal nonumber
