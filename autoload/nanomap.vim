@@ -136,7 +136,7 @@ function! s:apply_nanomap(job, exit_status) abort
         if type(a:job) == v:t_job
             let w:nanomap_content = getbufline(winbufnr(w:nanomap_winid), 1, '$')
         elseif !exists('w:nanomap_content') || w:nanomap_prev_changedtick < 0
-            return
+            call s:update_nanomap(-1)
         endif
         let l:nanomap_content = copy(w:nanomap_content)
         for l:i in range(float2nr(floor(l:line_upper)),
