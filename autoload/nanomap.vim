@@ -12,8 +12,13 @@ let s:is_loaded = 1
 let s:script_dir = expand('<sfile>:p:h')
 
 let g:maps_dict = {}
+let s:nanomap_ready_to_update = 1
 autocmd NanoMap BufEnter * call s:resize_maps()
 autocmd NanoMap WinNew * call s:realign_maps()
+autocmd NanoMap CursorMoved * let s:nanomap_ready_to_update = 0
+autocmd NanoMap CursorMovedI * let s:nanomap_ready_to_update = 0
+autocmd NanoMap CursorHold * let s:nanomap_ready_to_update = 1
+autocmd NanoMap CursorHoldI * let s:nanomap_ready_to_update = 1
 
 function! nanomap#define_palette() abort
     if has('gui_running') || (has('termguicolors') && &termguicolors)
@@ -100,7 +105,8 @@ function! s:update_nanomap(ch) abort
     try
         if nanomap#nanomap_exists()
             if w:nanomap_prev_changedtick != b:changedtick &&
-                        \ (reltimefloat(reltime()) - w:nanomap_prev_update_time) * 1000 >= g:nanomap_update_delay
+                        \ (reltimefloat(reltime()) - w:nanomap_prev_update_time) * 1000 >= g:nanomap_update_delay &&
+                        \ s:nanomap_ready_to_update
                 let l:cmd = 'python ' . s:script_dir . '/nanomap/text_density.py'
                 let l:cmd .= ' --color_bins ' . s:len_nanomap_palette
                 let l:cmd .= ' --n_target_lines ' . winheight(w:nanomap_winid)
@@ -123,7 +129,7 @@ function! s:update_nanomap(ch) abort
         echomsg '[nanomap.vim] Something went wrong. Stopping update of nanomap...'
         echomsg '[nanomap.vim] Problem details: ' . v:exception
         call timer_stop(a:ch)
-        unlet s:nanomap_timer
+        "unlet s:nanomap_timer
     endtry
 endfunction
 
@@ -149,7 +155,9 @@ function! s:apply_nanomap(channel) abort
         elseif !exists('w:nanomap_content') || w:nanomap_prev_changedtick < 0
             " Should update the map immediately
             let w:nanomap_prev_update_time = 0
+            let s:nanomap_ready_to_update = 1
             call s:update_nanomap(-1)
+            return
         endif
         let l:nanomap_content = copy(w:nanomap_content)
 
