@@ -216,8 +216,6 @@ function! s:realign_maps() abort
     if g:nanomap_auto_realign
         let l:current_winid = win_getid()
         for l:win in getwininfo()
-            echo l:win
-            sleep 1
             call win_gotoid(l:win['winid'])
             let l:nanomap_winid = getwinvar(l:win['winnr'], 'nanomap_winid')
             if !empty(l:nanomap_winid) && win_id2win(l:nanomap_winid) != 0
