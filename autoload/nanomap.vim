@@ -44,18 +44,18 @@ function! nanomap#nanomap_exists() abort
     if exists('w:nanomap_name')
                 \ && exists('w:nanomap_winid')
                 \ && win_id2win(w:nanomap_winid) != 0
-                \ && bufname(winbufnr(w:nanomap_winid))[:6] ==# 'nanomap'
+                \ && bufname(winbufnr(w:nanomap_winid))[-8:] ==# ':nanomap'
         return 1
     endif
     return 0
 endfunction
 
 function! nanomap#show_nanomap() abort
-    if bufname('%')[:7] == 'nanomap:'
+    if bufname('%')[-8:] == ':nanomap'
         return
     endif
     call nanomap#define_palette()
-    let w:nanomap_name = 'nanomap:' . expand('%:p') . win_getid()
+    let w:nanomap_name = expand('%:p') . ':' . win_getid() . ':nanomap'
     if !nanomap#nanomap_exists()
         autocmd! NanoMap WinNew *
         let l:current_winid = win_getid()
@@ -216,6 +216,8 @@ function! s:realign_maps() abort
     if g:nanomap_auto_realign
         let l:current_winid = win_getid()
         for l:win in getwininfo()
+            echo l:win
+            sleep 1
             call win_gotoid(l:win['winid'])
             let l:nanomap_winid = getwinvar(l:win['winnr'], 'nanomap_winid')
             if !empty(l:nanomap_winid) && win_id2win(l:nanomap_winid) != 0
