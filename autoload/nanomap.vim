@@ -104,7 +104,6 @@ endfunction
 function! s:update_nanomap(ch) abort
     try
         if nanomap#nanomap_exists()
-            echo s:nanomap_ready_to_update
             if w:nanomap_prev_changedtick != b:changedtick &&
                         \ (reltimefloat(reltime()) - w:nanomap_prev_update_time) * 1000 >= g:nanomap_update_delay &&
                         \ s:nanomap_ready_to_update
