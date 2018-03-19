@@ -104,6 +104,7 @@ endfunction
 function! s:update_nanomap(ch) abort
     try
         if nanomap#nanomap_exists()
+            echo s:nanomap_ready_to_update
             if w:nanomap_prev_changedtick != b:changedtick &&
                         \ (reltimefloat(reltime()) - w:nanomap_prev_update_time) * 1000 >= g:nanomap_update_delay &&
                         \ s:nanomap_ready_to_update
@@ -129,7 +130,7 @@ function! s:update_nanomap(ch) abort
         echomsg '[nanomap.vim] Something went wrong. Stopping update of nanomap...'
         echomsg '[nanomap.vim] Problem details: ' . v:exception
         call timer_stop(a:ch)
-        "unlet s:nanomap_timer
+        unlet s:nanomap_timer
     endtry
 endfunction
 
@@ -176,6 +177,8 @@ function! s:apply_nanomap(channel) abort
         endtry
         try
             call setbufline(winbufnr(w:nanomap_winid), 1, l:nanomap_content)
+            " Fire CursorHold, since setbufline() seems to interrupt it.
+            doautocmd NanoMap CursorHold
         catch /^Vim\%((\a\+)\)\=:E21/
             " Catch nomodifible
         endtry
