@@ -23,6 +23,7 @@ To disable, `:NanoMapClose` or just close the window of the map.
 - `g:nanomap_update_delay`: Update interval for the content of the map in milliseconds. Defaults to `5000`. Small value will cause laggy editting.
 - `g:nanomap_width`: Width of the buffer for the map. Defaults to `2`.
 - `g:nanomap_auto_realign`: If `1`, the map (somewhat agressively) follows when the window is split. Defaults to `0`.
+- `g:nanomap_auto_open_close`: If `1`, the map opens and closes automatically. Defaults to `0`.
 - `g:nanomap_relative_color`: If `1`, color of the map is based on relative density of the buffer. Otherwise, it is based on absolute density. Defaults to `0`.
 
 ### Advanced setting example
@@ -30,13 +31,6 @@ This setting allows your vim to open NanoMap automatically.
 ```vim
 " More scrollbar-ish behavior
 let g:nanomap_auto_realign = 1
+let g:nanomap_auto_open_close = 1
 let g:nanomap_highlight_delay = 100
-
-" Automatically open NanoMap on opening files.
-autocmd vimrc BufRead * NanoMapShow
-" Automatically close NanoMap
-"   Note that this causes E855 when you attempt to :close the last buffer.
-autocmd vimrc BufWinLeave * NanoMapClose
-"   Using :quit instead of :close works without error.
-autocmd vimrc QuitPre * NanoMapClose
 ```

@@ -92,6 +92,9 @@ endif
 if !exists('g:nanomap_relative_color')
     let g:nanomap_relative_color = 0
 endif
+if !exists('g:nanomap_auto_open_close')
+    let g:nanomap_auto_open_close = 0
+endif
 if !exists('g:nanomap_verbose')
     let g:nanomap_verbose = 0
 endif
@@ -105,6 +108,12 @@ endfunction
 augroup NanoMap
     autocmd!
     autocmd ColorScheme * call s:define_palette_if_exists()
+    autocmd TabLeave * call nanomap#set_leaving_tab(1)
+    autocmd TabEnter * call nanomap#set_leaving_tab(0)
+    if g:nanomap_auto_open_close
+        autocmd BufRead * NanoMapShow
+        autocmd WinEnter * if !nanomap#get_leaving_tab() | call nanomap#close_abandoned() | endif
+    endif
 augroup END
 
 command! NanoMapShow call nanomap#show_nanomap()

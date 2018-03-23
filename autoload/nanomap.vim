@@ -13,8 +13,9 @@ let s:script_dir = expand('<sfile>:p:h')
 
 let g:maps_dict = {}
 let s:nanomap_ready_to_update = 1
-autocmd NanoMap BufEnter * call s:resize_maps()
-autocmd NanoMap WinNew * call s:realign_maps()
+let s:leaving_tab = 0
+autocmd NanoMap BufEnter * call nanomap#resize_maps()
+autocmd NanoMap WinNew * call nanomap#realign_maps()
 autocmd NanoMap CursorMoved * let s:nanomap_ready_to_update = 0
 autocmd NanoMap CursorMovedI * let s:nanomap_ready_to_update = 0
 autocmd NanoMap CursorHold * let s:nanomap_ready_to_update = 1
@@ -45,6 +46,14 @@ function! nanomap#define_palette() abort
     endfor
 endfunction
 
+function! nanomap#set_leaving_tab(state) abort
+    let s:leaving_tab = a:state
+endfunction
+
+function! nanomap#get_leaving_tab() abort
+    return s:leaving_tab
+endfunction
+
 function! nanomap#nanomap_exists() abort
     if exists('w:nanomap_name')
                 \ && exists('w:nanomap_winid')
@@ -57,6 +66,7 @@ endfunction
 
 function! nanomap#show_nanomap() abort
     if bufname('%')[-8:] == ':nanomap'
+        echo bufname('%')
         return
     endif
     call nanomap#define_palette()
@@ -87,7 +97,7 @@ function! nanomap#show_nanomap() abort
         let w:nanomap_winid = l:nanomap_winid
         let w:nanomap_height = winheight(w:nanomap_winid)
 
-        autocmd NanoMap WinNew * call s:realign_maps()
+        autocmd NanoMap WinNew * call nanomap#realign_maps()
     else
         if g:nanomap_verbose
             echo '[nanomap.vim] NanoMap is already there!'
@@ -194,6 +204,20 @@ function! nanomap#close() abort
     endif
 endfunction
 
+function! nanomap#close_abandoned() abort
+    for l:win in getwininfo()
+        try
+            if bufname(l:win['bufnr'])[-8:] == ':nanomap' && l:win['tabnr'] == tabpagenr()
+                let l:nanomap_source_winid = l:win['variables']['nanomap_source_winid']
+                if winbufnr(l:nanomap_source_winid) < 0
+                    execute l:win['winnr'] . 'close'
+                endif
+            endif
+        catch
+        endtry
+    endfor
+endfunction
+
 function! nanomap#goto_line(source_winid) abort
     if win_id2win(a:source_winid) != 0
         let l:pos_frac = (line('.') + 0.0) / (line('$') - count(getline(1, '$'), ''))
@@ -207,21 +231,25 @@ function! nanomap#goto_line(source_winid) abort
     endif
 endfunction
 
-function! s:resize_maps() abort
+function! nanomap#resize_maps() abort
+    let l:current_winid = win_getid()
+    echo l:current_winid
     for l:map_name in keys(g:maps_dict)
         for l:winid in win_findbuf(bufnr(l:map_name))
             if winwidth(l:winid) != g:nanomap_width
-                let l:current_winid = win_getid()
                 call win_gotoid(l:winid)
                 call execute('vertical resize ' . g:nanomap_width)
                 call cursor(0, 1)
-                call win_gotoid(l:current_winid)
             endif
         endfor
     endfor
+    call win_gotoid(l:current_winid)
 endfunction
 
-function! s:realign_maps() abort
+function! nanomap#realign_maps() abort
+    if s:leaving_tab
+        return
+    endif
     autocmd! NanoMap WinNew *
     if g:nanomap_auto_realign
         let l:current_winid = win_getid()
@@ -236,7 +264,7 @@ function! s:realign_maps() abort
         endfor
         call win_gotoid(l:current_winid)
     endif
-    autocmd NanoMap WinNew * call s:realign_maps()
+    autocmd NanoMap WinNew * call nanomap#realign_maps()
 endfunction
 
 let &cpoptions = s:save_cpo
