@@ -233,7 +233,6 @@ endfunction
 
 function! nanomap#resize_maps() abort
     let l:current_winid = win_getid()
-    echo l:current_winid
     for l:map_name in keys(g:maps_dict)
         for l:winid in win_findbuf(bufnr(l:map_name))
             if winwidth(l:winid) != g:nanomap_width
