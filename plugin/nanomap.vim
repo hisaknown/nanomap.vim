@@ -100,7 +100,7 @@ if !exists('g:nanomap_verbose')
 endif
 
 function! s:define_palette_if_exists() abort
-    if exists('b:nanomap_name') && exists('b:nanomap_winid') && win_id2win(b:nanomap_winid) != 0
+    if nanomap#nanomap_exists()
         call nanomap#define_palette()
     endif
 endfunction
