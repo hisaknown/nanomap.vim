@@ -80,6 +80,7 @@ function! nanomap#show_nanomap() abort
         let &eventignore = l:eventignore
         let l:nanomap_winid = win_getid()
         let w:nanomap_source_winid = l:current_winid
+        let w:nanomap_source_bufnr = winbufnr(l:current_winid)
         setlocal nonumber
         setlocal nowrap
         setlocal winwidth=1
@@ -151,6 +152,14 @@ function! s:apply_nanomap(channel) abort
             %delete _
             call win_gotoid(l:current_winid)
             let w:nanomap_height = winheight(w:nanomap_winid)
+            let w:nanomap_prev_changedtick = -1
+            if exists('w:nanomap_content')
+                unlet w:nanomap_content
+            endif
+        endif
+
+        if bufnr('%') != getwinvar(win_id2win(w:nanomap_winid), 'nanomap_source_bufnr')
+            call setwinvar(win_id2win(w:nanomap_winid), 'nanomap_source_bufnr', bufnr('%'))
             let w:nanomap_prev_changedtick = -1
             if exists('w:nanomap_content')
                 unlet w:nanomap_content
