@@ -146,7 +146,7 @@ function! s:update_nanomap(ch) abort
 endfunction
 
 function! s:apply_nanomap(channel) abort
-    if nanomap#nanomap_exists()
+    if nanomap#nanomap_exists() && mode() != 'c'
         if winheight(w:nanomap_winid) != w:nanomap_height
             let l:current_winid = win_getid()
             call win_gotoid(w:nanomap_winid)
