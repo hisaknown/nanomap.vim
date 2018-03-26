@@ -66,7 +66,6 @@ endfunction
 
 function! nanomap#show_nanomap() abort
     if bufname('%')[-8:] == ':nanomap'
-        echo bufname('%')
         return
     endif
     call nanomap#define_palette()
