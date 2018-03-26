@@ -11,10 +11,9 @@ endif
 let s:is_loaded = 1
 let s:script_dir = expand('<sfile>:p:h')
 
-let g:maps_dict = {}
 let s:nanomap_ready_to_update = 1
 let s:leaving_tab = 0
-autocmd NanoMap BufEnter * call nanomap#resize_maps()
+autocmd NanoMap WinEnter * call nanomap#resize_maps()
 autocmd NanoMap WinNew * call nanomap#realign_maps()
 autocmd NanoMap CursorMoved * let s:nanomap_ready_to_update = 0
 autocmd NanoMap CursorMovedI * let s:nanomap_ready_to_update = 0
@@ -242,14 +241,13 @@ endfunction
 
 function! nanomap#resize_maps() abort
     let l:current_winid = win_getid()
-    for l:map_name in keys(g:maps_dict)
-        for l:winid in win_findbuf(bufnr(l:map_name))
-            if winwidth(l:winid) != g:nanomap_width
-                call win_gotoid(l:winid)
-                call execute('vertical resize ' . g:nanomap_width)
-                call cursor(0, 1)
-            endif
-        endfor
+    for l:winid in gettabinfo(tabpagenr())[0]['windows']
+        let l:nanomap_source_winid = getwinvar(l:winid, 'nanomap_source_winid')
+        if !empty(l:nanomap_source_winid) && winwidth(l:winid) != g:nanomap_width
+            call win_gotoid(l:winid)
+            call execute('vertical resize ' . g:nanomap_width)
+            call cursor(0, 1)
+        endif
     endfor
     call win_gotoid(l:current_winid)
 endfunction
