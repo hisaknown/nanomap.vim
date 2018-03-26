@@ -72,10 +72,13 @@ function! nanomap#show_nanomap() abort
     call nanomap#define_palette()
     let w:nanomap_name = expand('%:p') . ':' . win_getid() . ':nanomap'
     if !nanomap#nanomap_exists()
-        autocmd! NanoMap WinNew *
         let l:current_winid = win_getid()
         let l:nanomap_name = w:nanomap_name
+
+        let l:eventignore = &eventignore
+        set eventignore=WinNew
         execute('silent! noswapfile vertical rightbelow ' . g:nanomap_width . 'split ' . l:nanomap_name)
+        let &eventignore = l:eventignore
         let l:nanomap_winid = win_getid()
         let w:nanomap_source_winid = l:current_winid
         setlocal nonumber
@@ -96,8 +99,6 @@ function! nanomap#show_nanomap() abort
         call win_gotoid(l:current_winid)
         let w:nanomap_winid = l:nanomap_winid
         let w:nanomap_height = winheight(w:nanomap_winid)
-
-        autocmd NanoMap WinNew * call nanomap#realign_maps()
     else
         if g:nanomap_verbose
             echo '[nanomap.vim] NanoMap is already there!'
@@ -152,6 +153,9 @@ function! s:apply_nanomap(channel) abort
             call win_gotoid(l:current_winid)
             let w:nanomap_height = winheight(w:nanomap_winid)
             let w:nanomap_prev_changedtick = -1
+            if exists('w:nanomap_content')
+                unlet w:nanomap_content
+            endif
         endif
 
         if type(a:channel) == v:t_channel
@@ -162,11 +166,14 @@ function! s:apply_nanomap(channel) abort
             while len(w:nanomap_content) < w:nanomap_height
                 call add(w:nanomap_content, '')
             endwhile
-        elseif !exists('w:nanomap_content') || w:nanomap_prev_changedtick < 0
+        elseif !exists('w:nanomap_content') && w:nanomap_prev_changedtick < 0
             " Should update the map immediately
             let w:nanomap_prev_update_time = 0
             let s:nanomap_ready_to_update = 1
             call s:update_nanomap(-1)
+            return
+        elseif !exists('w:nanomap_content')
+            " Map is not present yet
             return
         endif
         let l:nanomap_content = copy(w:nanomap_content)
@@ -249,21 +256,24 @@ function! nanomap#realign_maps() abort
     if s:leaving_tab
         return
     endif
-    autocmd! NanoMap WinNew *
     if g:nanomap_auto_realign
         let l:current_winid = win_getid()
+        let l:winids_with_nanomap = []
         for l:win in getwininfo()
-            call win_gotoid(l:win['winid'])
-            let l:nanomap_winid = getwinvar(l:win['winnr'], 'nanomap_winid')
+            let l:nanomap_winid = getwinvar(win_id2win(l:win['winid']), 'nanomap_winid')
             if !empty(l:nanomap_winid) && win_id2win(l:nanomap_winid) != 0
+                call win_gotoid(l:win['winid'])
+                call add(l:winids_with_nanomap, l:win['winid'])
                 call nanomap#close()
-                call nanomap#show_nanomap()
-                call s:apply_nanomap(-1)
             endif
+        endfor
+        for l:winid in l:winids_with_nanomap
+            call win_gotoid(l:winid)
+            call nanomap#show_nanomap()
+            call s:apply_nanomap(-1)
         endfor
         call win_gotoid(l:current_winid)
     endif
-    autocmd NanoMap WinNew * call nanomap#realign_maps()
 endfunction
 
 let &cpoptions = s:save_cpo
