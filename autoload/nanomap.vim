@@ -189,8 +189,8 @@ function! s:apply_nanomap(channel) abort
                     let l:nanomap_content[l:i] .= 'hi'
                 endif
             endfor
-        catch /^Vim\%((\a\+)\)\=:E684/
-            " Catch out of range
+        catch /^Vim\%((\a\+)\)\=:E\(684\|727\)/
+            " Catch out of range and invalid range
         endtry
         try
             call setbufline(winbufnr(w:nanomap_winid), 1, l:nanomap_content)
