@@ -261,11 +261,11 @@ function! nanomap#realign_maps() abort
     if g:nanomap_auto_realign
         let l:current_winid = win_getid()
         let l:winids_with_nanomap = []
-        for l:win in getwininfo()
-            let l:nanomap_winid = getwinvar(win_id2win(l:win['winid']), 'nanomap_winid')
+        for l:winid in gettabinfo(tabpagenr())[0]['windows']
+            let l:nanomap_winid = getwinvar(win_id2win(l:winid), 'nanomap_winid')
             if !empty(l:nanomap_winid) && win_id2win(l:nanomap_winid) != 0
-                call win_gotoid(l:win['winid'])
-                call add(l:winids_with_nanomap, l:win['winid'])
+                call win_gotoid(l:winid)
+                call add(l:winids_with_nanomap, l:winid)
                 call nanomap#close()
             endif
         endfor
