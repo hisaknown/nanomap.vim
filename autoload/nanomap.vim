@@ -105,26 +105,27 @@ function! nanomap#show_nanomap() abort
         endif
     endif
 
+    let w:nanomap_prev_changedtick = -1
+    let w:nanomap_prev_update_time = 0
     if !exists('s:nanomap_timer')
         let s:nanomap_timer = timer_start(g:nanomap_highlight_delay, funcref('s:update_nanomap'), {'repeat': -1})
     endif
-    let w:nanomap_prev_changedtick = -1
-    let w:nanomap_prev_update_time = 0
 endfunction
 
 function! s:update_nanomap(ch) abort
     try
         if nanomap#nanomap_exists()
-            if w:nanomap_prev_changedtick != b:changedtick &&
+            if (w:nanomap_prev_changedtick != b:changedtick &&
                         \ (reltimefloat(reltime()) - w:nanomap_prev_update_time) * 1000 >= g:nanomap_update_delay &&
-                        \ s:nanomap_ready_to_update
+                        \ s:nanomap_ready_to_update) ||
+                        \ bufnr('%') != getwinvar(win_id2win(w:nanomap_winid), 'nanomap_source_bufnr')
                 let l:cmd = 'python ' . s:script_dir . '/nanomap/text_density.py'
                 let l:cmd .= ' --color_bins ' . s:len_nanomap_palette
                 let l:cmd .= ' --n_target_lines ' . winheight(w:nanomap_winid)
                 if g:nanomap_relative_color
                     let l:cmd .= ' --relative_color'
                 endif
-                let l:job = job_start(l:cmd,
+                let s:job = job_start(l:cmd,
                             \ {'in_io': 'buffer',
                             \  'in_buf': bufnr('%'),
                             \  'out_msg': '',
@@ -132,6 +133,7 @@ function! s:update_nanomap(ch) abort
                             \ })
                 let w:nanomap_prev_changedtick = b:changedtick
                 let w:nanomap_prev_update_time = reltimefloat(reltime())
+                call setwinvar(win_id2win(w:nanomap_winid), 'nanomap_source_bufnr', bufnr('%'))
             else
                 call s:apply_nanomap(-1)
             endif
@@ -152,14 +154,6 @@ function! s:apply_nanomap(channel) abort
             %delete _
             call win_gotoid(l:current_winid)
             let w:nanomap_height = winheight(w:nanomap_winid)
-            let w:nanomap_prev_changedtick = -1
-            if exists('w:nanomap_content')
-                unlet w:nanomap_content
-            endif
-        endif
-
-        if bufnr('%') != getwinvar(win_id2win(w:nanomap_winid), 'nanomap_source_bufnr')
-            call setwinvar(win_id2win(w:nanomap_winid), 'nanomap_source_bufnr', bufnr('%'))
             let w:nanomap_prev_changedtick = -1
             if exists('w:nanomap_content')
                 unlet w:nanomap_content
