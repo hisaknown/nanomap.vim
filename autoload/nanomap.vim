@@ -15,8 +15,6 @@ let s:nanomap_ready_to_update = 1
 let s:leaving_tab = 0
 autocmd NanoMap WinEnter * call nanomap#resize_maps()
 autocmd NanoMap WinNew * call nanomap#realign_maps()
-autocmd NanoMap CursorMoved * let s:nanomap_ready_to_update = 0
-autocmd NanoMap CursorMovedI * let s:nanomap_ready_to_update = 0
 autocmd NanoMap CursorHold * let s:nanomap_ready_to_update = 1
 autocmd NanoMap CursorHoldI * let s:nanomap_ready_to_update = 1
 
@@ -133,6 +131,7 @@ function! s:update_nanomap(ch) abort
                 let w:nanomap_prev_changedtick = b:changedtick
                 let w:nanomap_prev_update_time = reltimefloat(reltime())
                 call setwinvar(win_id2win(w:nanomap_winid), 'nanomap_source_bufnr', bufnr('%'))
+                let s:nanomap_ready_to_update = 0
             else
                 call s:apply_nanomap(-1)
             endif
@@ -194,8 +193,6 @@ function! s:apply_nanomap(channel) abort
         endtry
         try
             call setbufline(winbufnr(w:nanomap_winid), 1, l:nanomap_content)
-            " Fire CursorHold, since setbufline() seems to interrupt it.
-            doautocmd NanoMap CursorHold
         catch /^Vim\%((\a\+)\)\=:E21/
             " Catch nomodifible
         endtry
