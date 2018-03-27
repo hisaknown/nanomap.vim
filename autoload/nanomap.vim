@@ -145,7 +145,6 @@ function! s:update_nanomap(ch) abort
 endfunction
 
 function! s:apply_nanomap(channel) abort
-    echomsg mode(1)
     if nanomap#nanomap_exists() && index(['n', 'i', 'R', 'v', 'V', ''], mode(1)) >= 0
         if winheight(w:nanomap_winid) != w:nanomap_height
             let l:current_winid = win_getid()
@@ -189,13 +188,13 @@ function! s:apply_nanomap(channel) abort
                     let l:nanomap_content[l:i] .= 'hi'
                 endif
             endfor
-        catch /^Vim\%((\a\+)\)\=:E\(684\|727\|523\)/
-            " Catch out of range, invalid range, and unsafe
+        catch /^Vim\%((\a\+)\)\=:E\(684\|727\)/
+            " Catch out of range and invalid range
         endtry
         try
             call setbufline(winbufnr(w:nanomap_winid), 1, l:nanomap_content)
-        catch /^Vim\%((\a\+)\)\=:E21/
-            " Catch nomodifible
+        catch /^Vim\%((\a\+)\)\=:E\(21\|523\)/
+            " Catch nomodifiable and unsafe
         endtry
     endif
 endfunction
