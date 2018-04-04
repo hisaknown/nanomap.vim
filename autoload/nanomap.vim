@@ -85,6 +85,7 @@ function! nanomap#show_nanomap() abort
         setlocal modifiable
         setlocal filetype=nanomap
         setlocal winfixwidth
+        setlocal undolevels=-1
         for l:i in range(s:len_nanomap_palette)
             for l:j in range(s:len_nanomap_palette)
                 call matchadd('nanomap' . printf('%02d%02d', l:i, l:j), printf('▀%02d%02d', l:i, l:j))
