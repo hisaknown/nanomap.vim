@@ -82,6 +82,7 @@ function! nanomap#show_nanomap() abort
         setlocal nowrap
         setlocal winwidth=1
         setlocal buftype=nofile
+        setlocal bufhidden=delete
         setlocal modifiable
         setlocal filetype=nanomap
         setlocal winfixwidth
