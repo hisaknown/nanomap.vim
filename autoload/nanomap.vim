@@ -32,14 +32,14 @@ function! nanomap#define_palette() abort
     endif
 
     for l:i in range(s:len_nanomap_palette)
-        for l:j in range(s:len_nanomap_palette)
-            execute('highlight nanomap' . printf('%02d%02d', l:i, l:j)
-                        \ . ' ' . s:backend . 'fg=' . s:nanomap_palette[l:i]
-                        \ . ' ' . s:backend . 'bg=' . s:nanomap_palette[l:j])
-            execute('highlight nanomap' . printf('%02d%02dhi', l:i, l:j)
-                        \ . ' ' . s:backend . 'fg=' . s:nanomap_palette_hi[l:i]
-                        \ . ' ' . s:backend . 'bg=' . s:nanomap_palette_hi[l:j])
-        endfor
+        execute('highlight nanomap' . printf('%02dxx', l:i)
+                    \ . ' ' . s:backend . 'fg=' . s:nanomap_palette[l:i])
+        execute('highlight nanomap' . printf('%02dxxhi', l:i)
+                    \ . ' ' . s:backend . 'fg=' . s:nanomap_palette_hi[l:i])
+        execute('highlight nanomap' . printf('xx%02d', l:i)
+                    \ . ' ' . s:backend . 'bg=' . s:nanomap_palette[l:i])
+        execute('highlight nanomap' . printf('xx%02dhi', l:i)
+                    \ . ' ' . s:backend . 'bg=' . s:nanomap_palette_hi[l:i])
     endfor
 endfunction
 
@@ -87,10 +87,10 @@ function! nanomap#show_nanomap() abort
         setlocal winfixwidth
         setlocal undolevels=-1
         for l:i in range(s:len_nanomap_palette)
-            for l:j in range(s:len_nanomap_palette)
-                call matchadd('nanomap' . printf('%02d%02d', l:i, l:j), printf('▀%02d%02d', l:i, l:j))
-                call matchadd('nanomap' . printf('%02d%02dhi', l:i, l:j), printf('▀%02d%02dhi', l:i, l:j))
-            endfor
+            call matchadd('nanomap' . printf('%02dxx', l:i), printf('▀%02d..', l:i))
+            call matchadd('nanomap' . printf('%02dxxhi', l:i), printf('▀%02d..hi', l:i))
+            call execute('syntax match nanomap' . printf('xx%02d', l:i) . ' ' . printf('/▀..%02d/', l:i))
+            call execute('syntax match nanomap' . printf('xx%02dhi', l:i) . ' ' . printf('/▀..%02dhi/', l:i))
         endfor
         nnoremap <buffer><silent> <CR> :<C-u>silent! call nanomap#goto_line(w:nanomap_source_winid)<CR>
         nnoremap <buffer><silent> <LeftRelease> <Esc>:<C-u>silent! call nanomap#goto_line(w:nanomap_source_winid)<CR>
