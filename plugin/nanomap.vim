@@ -113,6 +113,7 @@ augroup NanoMap
     if g:nanomap_auto_open_close
         autocmd WinNew,VimEnter * NanoMapShow
         autocmd WinEnter * if !nanomap#get_leaving_tab() | call nanomap#close_abandoned() | endif
+        autocmd QuitPre * call nanomap#close()
     endif
 augroup END
 
